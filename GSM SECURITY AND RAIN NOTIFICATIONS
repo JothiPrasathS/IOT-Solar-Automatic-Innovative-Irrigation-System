@@ -1,0 +1,156 @@
+#include <DHT.h>    /*HEADERFILE*/
+#include <DHT_U.h>
+
+#include <SoftwareSerial.h>
+
+#include<LiquidCrystal.h>
+LiquidCrystal Lcd(8,9,10,11,12,13);  /*To set the pins for lcd diasplay*/
+//dht DHT;
+int mo=A1;
+
+#define trigPin 4 /*For ultra sonic sensor*/
+#define echoPin 3
+#define d A2      /*For humidity and temperature*/
+int distance,duration;
+int buzz=2;
+float humidity;
+float moisture;
+float temp;
+SoftwareSerial SIM900A(5,6);//(rx,tx)
+
+void setup()
+{
+   pinMode(trigPin, OUTPUT); 
+   pinMode(buzz,OUTPUT);
+   pinMode(echoPin, INPUT);
+   pinMode(soundpin,INPUT);
+   pinMode(mo,INPUT);
+   SIM900A.begin(9600);   /*To set the baud rate GSM*/
+   Serial.begin(9600);   /*To set the baud rate LCD*/
+   Lcd.begin(16,2);
+   Lcd.clear();      // Setting the baud rate of Serial Monitor (Arduino)
+   Serial.println ("SIM900A Ready");
+   delay(100);
+}
+void loop()
+{
+     //DHT.read11(d);
+     scrolling_loop();   /*To set the LCD display to display in scrolling loop its calls the loop*/
+     digitalWrite(buzz,LOW);
+    int sensor_analog=analogRead(mo); 
+     int m = ( 100 - ( (sensor_analog/1023.00) * 100 ) );
+  
+    digitalWrite(trigPin, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(trigPin, LOW);
+    duration = pulseIn(echoPin, HIGH);
+    distance = (duration/2) / 29.1;
+    Serial.print(distance);
+    Serial.println("cm");
+    Serial.print(m);
+    Serial.println("%m");
+    
+    delay(1000);
+    //__________________
+     humidity=DHT.humidity;
+      temp=DHT.temperature;
+      Serial.print("H=");
+      Serial.println(humidity);
+      Serial.print("T=");
+      Serial.println(temp);
+      Lcd.setCursor(0,1);  /*To set the position in lcd display*/
+      Lcd.print("H=");
+      Lcd.setCursor(2,1);
+      Lcd.print(humidity);
+      Lcd.setCursor(8,1);
+      Lcd.print("T=");
+      Lcd.setCursor(10,1);
+      Lcd.print(temp);
+      //____________________________
+     if (distance >=100  || distance <= 0) /*To check the condition distance*/
+     {
+      Serial.println("no object");
+      Serial.print(distance);
+      Serial.println(" cm");
+      delay(1000);
+     }
+     else
+     {
+      digitalWrite(buzz,HIGH);   /*To set the buzzer high to warning*/
+      Serial.println ("Sending Message");  /*To set the GSM to notify to the given number*/
+      SIM900A.println("AT+CMGF=1");   
+      delay(1000);
+      Serial.println ("Set SMS Number");
+      SIM900A.println("AT+CMGS=\"9361489543\"\r"); //Mobile phone number to send message
+      delay(1000);
+      Serial.println ("Set SMS Content");
+      SIM900A.println("Some one enter in the field");  // Messsage content
+      SIM900A.print("H=");
+      SIM900A.println(DHT.humidity);
+      SIM900A.print("T=");
+      SIM900A.println(DHT.temperature);
+      SIM900A.print("M=");
+      SIM900A.println(m);
+      
+      delay(100);
+      Serial.println ("Finish");
+      SIM900A.println((char)26);// ASCII code of CTRL+Z
+      delay(1000);
+      Serial.println ("Message has been sent ->SMS ");
+      digitalWrite(buzz,LOW);
+     }
+     //moisture condition
+     if(m<20)
+     {
+      Serial.println("not wet");
+      delay(1000);
+     }
+     else 
+     {
+      Serial.println ("Sending Message");
+      SIM900A.println("AT+CMGF=1");   
+      delay(1000);
+      Serial.println ("Set SMS Number");
+      SIM900A.println("AT+CMGS=\"9361489543\"\r"); //Mobile phone number to send message
+      delay(1000);
+      Serial.println ("Set SMS Content");
+      SIM900A.println("Raining in the field");
+      // Messsage content
+      SIM900A.print("H=");
+      SIM900A.println(DHT.humidity);
+      SIM900A.print("T=");
+      SIM900A.println(DHT.temperature);
+      SIM900A.print("M=");
+      SIM900A.println(m);
+      
+      delay(100);
+      Serial.println ("Finish");
+      SIM900A.println((char)26);// ASCII code of CTRL+Z
+      delay(1000);
+      Serial.println ("Message has been sent ->SMS ");
+     }
+}
+void scrolling_loop()
+{
+   String text = "Solar Automatic Inovative Irrigation System";
+   int i, j=0;
+  for (i =0; i<text.length(); i++)
+  {
+      if(i<15)
+      {
+          Lcd.setCursor(i,0);
+          Lcd.print(text.charAt(i));
+          delay(100);
+      }
+       else
+       {
+           for(i=16;i<text.length();i++)
+           {   
+               j++;
+               Lcd.setCursor(0,0);
+               Lcd.print(text.substring(j,j+16));
+             delay(300);
+           }
+       }
+  }
+}
