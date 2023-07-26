@@ -1,0 +1,72 @@
+int sensor_pin = A1;  /* Soil moisture sensor O/P pin */
+float moisture_percentage;
+int motor1pin1 = 2;
+int motor1pin2 = 3;
+int motor2pin1 = 4;
+int motor2pin2 = 5;
+int s1=7;
+int s2=8;
+void setup() {
+  Serial.begin(9600); /* Define baud rate for serial communication */
+ pinMode(13,OUTPUT); /* Set relay pin as output water pump */
+  
+ //motor
+ pinMode(s1,INPUT);
+ pinMode(s2,INPUT);
+ pinMode(motor1pin1, OUTPUT);
+pinMode(motor1pin2, OUTPUT);
+pinMode(motor2pin1, OUTPUT);
+pinMode(motor2pin2, OUTPUT);
+}
+
+void loop() {
+  
+  
+  int sensor_analog;
+  int switch1=digitalRead(s1);
+  int switch2=digitalRead(s2);
+  sensor_analog = analogRead(sensor_pin);
+  moisture_percentage = ( 100 - ( (sensor_analog/1023.00) * 100 ) );
+  Serial.print("Moisture Percentage = ");
+  Serial.print(moisture_percentage);
+  Serial.print("%\n\n");
+ delay(100);
+ 
+  if(moisture_percentage<20){   /* Soil moisture sensor to detect the value to check the condition */
+   
+    digitalWrite(13,HIGH);
+    delay(5000);
+    digitalWrite(13,LOW);
+             // frame moves for 2 seconds
+    digitalWrite(motor1pin1,HIGH);   /* Set right motor to rotate right*/
+    digitalWrite(motor1pin2,LOW);
+    digitalWrite(motor2pin1,LOW);   /* Set left motor to rotate left*/
+    digitalWrite(motor2pin2,HIGH);
+    delay(2000);
+    digitalWrite(motor1pin1,LOW);  /* Set right motor to off*/
+    digitalWrite(motor1pin2,LOW);
+    digitalWrite(motor2pin1,LOW);   /* Set left motor to off*/
+    digitalWrite(motor2pin2,LOW);
+  }
+  
+else if(moisture_percentage>80){   /* Soil moisture sensor to detect the value to check the condition */
+    digitalWrite(13,LOW);                  /* Set water pump to off*/
+    digitalWrite(motor1pin1,LOW);   /* Set right motor to rotate left*/ 
+    digitalWrite(motor1pin2,HIGH);
+    digitalWrite(motor2pin1,HIGH);   /* Set left motor to rotate right*/
+    digitalWrite(motor2pin2,LOW);
+    }
+  
+   else if(switch2==HIGH && switch2==HIGH)   /* if condition is true */
+    {
+    digitalWrite(motor1pin1,LOW);
+    digitalWrite(motor1pin2,LOW);
+    digitalWrite(motor2pin1,LOW);
+    digitalWrite(motor2pin2,LOW);
+    }
+    }
+   
+    
+    
+    
+    
